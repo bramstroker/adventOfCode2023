@@ -9,20 +9,25 @@ import (
 
 func main() {
 
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Advent Of Code 2023 - 1")
-	fmt.Println("---------------------")
-	var numbers [4]int
-	for i := 0; i < 4; i++ {
-		for {
-			fmt.Println(fmt.Sprintf("Provide calibration line #%d", i+1))
-			num := requestCalibrationLine(reader)
-			if num != 0 {
-				numbers[i] = num
-				break
-			}
-		}
+	readFile, err := os.Open("input.txt")
+
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	fileScanner := bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+
+	var numbers []int
+	for fileScanner.Scan() {
+		num := readCalibrationLine(fileScanner.Bytes())
+		if num == 0 {
+			fmt.Println("Invalid line supplied: ", fileScanner.Text())
+		}
+		numbers = append(numbers, num)
+	}
+
+	readFile.Close()
 
 	sum := 0
 	for _, num := range numbers {
@@ -31,9 +36,7 @@ func main() {
 	fmt.Println("Output =", sum)
 }
 
-func requestCalibrationLine(reader *bufio.Reader) int {
-	line, _, _ := reader.ReadLine()
-
+func readCalibrationLine(line []byte) int {
 	var firstNumber byte
 	var lastNumber byte
 	firstNumberSet := false
