@@ -6,13 +6,7 @@ $sum = 0;
 foreach ($lines as $line) {
     $pattern = '/(?=(' . implode('|', array_keys($map)). '|\d))/';
     preg_match_all($pattern, $line, $matches);
-
-    $firstNum = $map[$matches[1][0]] ?? $matches[1][0];
-    $secondNum = $matches[1][count($matches[1])-1];
-    if (isset($map[$secondNum])) {
-        $secondNum = $map[$secondNum];
-    }
-
-    $sum += (int) ($firstNum . $secondNum);
+    $numbers = array_map(fn($num) => $map[$num] ?? $num, $matches[1]);
+    $sum += (int) ($numbers[0] . $numbers[count($numbers)-1]);
 }
 echo 'Solution = ' . $sum;
