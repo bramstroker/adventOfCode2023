@@ -77,7 +77,7 @@ class Bag
             if ($bagCount->color === $cubeCount->color) {
                 $bagCount->amount -= $cubeCount->amount;
                 if ($bagCount->amount < 0) {
-                    throw new \Exception('Not enough cubes in bag');
+                    throw new \Exception('Not enough cubes in the bag');
                 }
             }
         }
@@ -93,10 +93,6 @@ class Draw
 
 class Game
 {
-    /**
-     * @param int    $id
-     * @param Draw[] $draws
-     */
     public function __construct(public int $id, public array $draws)
     {
     }
