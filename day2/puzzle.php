@@ -39,7 +39,7 @@ function solve2(array $lines): int
         $highestCountPerColor = [];
         foreach ($game->draws as $draw) {
             foreach ($draw->cubeCounts as $cubeCount) {
-                if (!isset($highestCountPerColor[$cubeCount->color]) || $highestCountPerColor[$cubeCount->color] < $cubeCount->amount) {
+                if (($highestCountPerColor[$cubeCount->color] ?? 0) < $cubeCount->amount) {
                     $highestCountPerColor[$cubeCount->color] = $cubeCount->amount;
                 }
             }
@@ -82,11 +82,6 @@ class Bag
             }
         }
     }
-
-    public function __clone()
-    {
-        $this->cubeCounts = array_map(fn(CubeCount $cubeCount) => clone $cubeCount, $this->cubeCounts);
-    }
 }
 
 class Draw
@@ -111,11 +106,9 @@ class Game
         $draws = [];
         preg_match('/Game ([0-9]+): (.*)/', $string, $matches);
         foreach (explode(';', $matches[2]) as $parsedDraw) {
-            $cubeCounts = [];
-            foreach (explode(',', $parsedDraw) as $cubeCount) {
-                $cubeCounts[] = CubeCount::parse(trim($cubeCount));
-            }
-            $draws[] = new Draw($cubeCounts);
+            $draws[] = new Draw(
+                array_map(fn(string $cubeCount) => CubeCount::parse($cubeCount), explode(', ', trim($parsedDraw)))
+            );
         }
         return new Game($matches[1], $draws);
     }
