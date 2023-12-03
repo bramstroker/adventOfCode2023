@@ -36,14 +36,13 @@ function solve1(array $grid): int
 function solve2(array $grid): int
 {
     $sum = 0;
-    $totalGearsFound = 0;
     foreach ($grid as $y => $line) {
         foreach ($line as $x => $char) {
             if ($char !== '*') {
                 continue;
             }
 
-            # Scan adjacent bounding box for numbers
+            # Scan adjacent bounding box for full numbers
             $numbersAt = [
                 ...findNumberCoordsAtLine($grid, $y-1, $x-1, $x+1),
                 ...findNumberCoordsAtLine($grid, $y, $x-1, $x+1),
@@ -58,27 +57,18 @@ function solve2(array $grid): int
                 continue;
             }
 
-            $number1 = resoleFullNumber($grid, $numbersAt[0]);
-            $number2 = resoleFullNumber($grid, $numbersAt[1]);
+            $number1 = resolveFullNumber($grid, $numbersAt[0]);
+            $number2 = resolveFullNumber($grid, $numbersAt[1]);
             $gearRatio = $number1 * $number2;
 
-            echo PHP_EOL;
             echo 'Gear found at ' . $y . ',' . $x . PHP_EOL;
-
-
-            if (!str_contains($surroundingGrid, $number1) || !str_contains($surroundingGrid, $number2)) {
-                throw new Exception('Gear numbers not found in grid');
-            }
-
             echo 'Gear numbers = ' . $number1 . ',' . $number2 . PHP_EOL;
             echo 'Gear ratio = ' . $gearRatio . PHP_EOL;
+            echo PHP_EOL;
 
             $sum += $gearRatio;
-            $totalGearsFound++;
         }
     }
-
-    echo 'Total gear = ' . $totalGearsFound;
     return $sum;
 }
 
@@ -96,7 +86,7 @@ function findNumberCoordsAtLine(array $grid, int $y, int $minX, int $maxX): arra
     return array_map(fn($match) => new Coordinate($match[1] + $minX, $y), $matches[0]);
 }
 
-function printSurroundingGrid(array $grid, Coordinate $coordinate)
+function printSurroundingGrid(array $grid, Coordinate $coordinate): string
 {
     $output = '';
     for ($y = $coordinate->y - 1; $y <= $coordinate->y + 2; $y++) {
@@ -137,7 +127,7 @@ function findAdjacent(
     return $found;
 }
 
-function resoleFullNumber(array $grid, Coordinate $coord): int
+function resolveFullNumber(array $grid, Coordinate $coord): int
 {
     $x = $coord->x;
     $y = $coord->y;
@@ -174,5 +164,8 @@ class Coordinate {
     ) {}
 }
 
-//echo 'Solution 1 = ' . solve1($grid) . PHP_EOL;
-echo 'Solution 1 = ' . solve2($grid) . PHP_EOL;
+$solution1 = solve1($grid);
+$solution2 = solve2($grid);
+
+echo 'Solution 1 = ' . $solution1 . PHP_EOL;
+echo 'Solution 2 = ' . $solution2 . PHP_EOL;
