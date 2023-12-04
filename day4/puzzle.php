@@ -49,12 +49,10 @@ class Card {
 
     public static function parse(string $input): Card
     {
-        preg_match('/Card\s+(\d+):/', $input, $matches);
+        preg_match('/^Card\s+(\d+):([0-9\s]+)\|([0-9\s]+)/', $input, $matches);
 
-        $cardData = substr($input, strpos($input, ':') + 1);
-        [$numbers, $winning] = explode('|', $cardData);
-        $numbers = array_map('intval', explode(' ', $numbers));
-        $winning = array_map('intval', explode(' ', $winning));
+        $numbers = array_map('intval', explode(' ', $matches[2]));
+        $winning = array_map('intval', explode(' ', $matches[3]));
         return new Card($matches[1], $numbers, $winning);
     }
 
