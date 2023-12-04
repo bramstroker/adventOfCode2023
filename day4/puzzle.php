@@ -5,39 +5,20 @@ $cards = array_map(fn($line) => Card::parse($line), $lines);
 
 function solve1(array $cards): int
 {
-    return calculateTotalScore($cards);
+    return array_reduce($cards, fn(int $carry, Card $card) => $carry + $card->calculateScore(), 0);
 }
 
 function solve2(array $cards): int
 {
-    $numTotalCards = 0;
+    $cardCount = array_fill(1, count($cards), 1);
     foreach ($cards as $card) {
-        echo 'Processing card ' . $card->cardNumber . PHP_EOL;
-        $numTotalCards += 1;
-        $extraCards = recurseWinExtraCards($card, $cards);
-        $numTotalCards += count($extraCards);
+        $winCount = $card->getWinCount();
+        for ($i = ($card->cardNumber + 1); $i <= ($card->cardNumber + $winCount); $i++) {
+            $cardCount[$i] += $cardCount[$card->cardNumber];
+        }
     }
 
-    return $numTotalCards;
-}
-
-function calculateTotalScore(array $cards): int
-{
-    return array_reduce($cards, fn(int $carry, Card $card) => $carry + $card->calculateScore(), 0);
-}
-
-function recurseWinExtraCards(Card $card, array $allCards, array &$extraWonCards = []): array
-{
-    $winCount = $card->getWinCount();
-    if ($winCount === 0) {
-        return [];
-    }
-
-    foreach (array_slice($allCards, $card->cardNumber, $winCount) as $extraCard) {
-        $extraWonCards[] = $extraCard;
-        recurseWinExtraCards($extraCard, $allCards, $extraWonCards);
-    }
-    return $extraWonCards;
+    return array_sum($cardCount);
 }
 
 class Card {
