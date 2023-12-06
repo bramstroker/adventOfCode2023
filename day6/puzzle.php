@@ -21,27 +21,11 @@ function parseRaces(array $lines, bool $removeSpaces = false): array
     return $races;
 }
 
-function parseRaces2(array $lines): array
-{
-    preg_match_all('/\d+/', $lines[0], $timeMatches);
-    preg_match_all('/\d+/', $lines[1], $distanceMatches);
-    $races = [];
-    foreach ($timeMatches[0] as $key => $time) {
-        $races[] = [
-            'time' => $time,
-            'distance' => $distanceMatches[0][$key],
-        ];
-    }
-    return $races;
-}
-
-function calculateWinWays(int $time, int $winningDistance)
+function calculateWinWays(int $time, int $winningDistance): int
 {
     $numWays = 0;
     for ($i = 0; $i < $time; $i++) {
-        //echo $i . PHP_EOL;
         $distance = $i * ($time - $i);
-        //echo 'Final distance: ' . $distance . PHP_EOL;
         if ($distance > $winningDistance) {
             $numWays++;
         }
@@ -49,9 +33,8 @@ function calculateWinWays(int $time, int $winningDistance)
     return $numWays;
 }
 
-function solve1(array $lines): int
+function solve(array $races): int
 {
-    $races = parseRaces($lines);
     $result = 0;
     foreach ($races as $race) {
         $ways = calculateWinWays($race['time'], $race['distance']);
@@ -65,25 +48,8 @@ function solve1(array $lines): int
     return $result;
 }
 
-function solve2(array $lines): int
-{
-    $races = parseRaces($lines, true);
-    var_dump($races);
-    $result = 0;
-    foreach ($races as $race) {
-        $ways = calculateWinWays($race['time'], $race['distance']);
-        //echo 'Ways: ' . $ways . PHP_EOL;
-        if ($result === 0) {
-            $result = $ways;
-        } else {
-            $result *= $ways;
-        }
-    }
-    return $result;
-}
-
-$solution1 = solve1($lines);
-$solution2 = solve2($lines);
+$solution1 = solve(parseRaces($lines));
+$solution2 = solve(parseRaces($lines, true));
 
 echo 'Solution 1 = ' . $solution1 . PHP_EOL;
 echo 'Solution 2 = ' . $solution2 . PHP_EOL;
