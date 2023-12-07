@@ -2,9 +2,9 @@
 
 $lines = explode("\n", file_get_contents(__DIR__ . '/input2.txt'));
 
-enum HandType: int
+enum HandRank: int
 {
-    case SINGLE = 1;
+    case HIGH_CARD = 1;
     case ONE_PAIR = 2;
     case TWO_PAIR = 3;
     case THREE_OF_A_KIND = 4;
@@ -16,7 +16,7 @@ enum HandType: int
 class Hand
 {
     private array $cards;
-    private ?HandType $handType = null;
+    private ?HandRank $handRank = null;
 
     public function __construct(string $hand, public int $bid)
     {
@@ -39,10 +39,10 @@ class Hand
         return implode('', $this->cards);
     }
 
-    public function getHandType(bool $allowJokers = false): HandType
+    public function getHandRank(bool $allowJokers = false): HandRank
     {
-        if ($this->handType !== null) {
-            return $this->handType;
+        if ($this->handRank !== null) {
+            return $this->handRank;
         }
 
         $cardCounts = array_count_values($this->cards);
@@ -55,66 +55,60 @@ class Hand
         }
         $cardCounts = array_values($cardCounts);
 
-        $this->handType = HandType::SINGLE;
         $primaryCardCount = $cardCounts[0] ?? 0;
-        if ($primaryCardCount === 2) {
-            $this->handType = HandType::ONE_PAIR;
-            if (($cardCounts[1] ?? 0) == 2) {
-                $this->handType = HandType::TWO_PAIR;
-            }
-        } elseif ($primaryCardCount === 3) {
-            $this->handType = HandType::THREE_OF_A_KIND;
-            if (($cardCounts[1] ?? 0) == 2) {
-                $this->handType = HandType::FULL_HOUSE;
-            }
-        } elseif ($primaryCardCount === 4) {
-            $this->handType = HandType::FOUR_OF_A_KIND;
-        } elseif ($primaryCardCount === 5) {
-            $this->handType = HandType::FIVE_OF_A_KIND;
-        }
+        $secondaryCardCount = $cardCounts[1] ?? 0;
+        $this->handRank = match ([$primaryCardCount, $secondaryCardCount]) {
+            [2, 0], [2, 1] => HandRank::ONE_PAIR,
+            [2, 2] => HandRank::TWO_PAIR,
+            [3, 0], [3, 1] => HandRank::THREE_OF_A_KIND,
+            [3, 2] => HandRank::FULL_HOUSE,
+            [4, 0], [4, 1] => HandRank::FOUR_OF_A_KIND,
+            [5, 0] => HandRank::FIVE_OF_A_KIND,
+            default => HandRank::HIGH_CARD,
+        };
 
         if ($numJokers > 0) {
-            $this->handType = $this->upgradeHandForJokers($numJokers);
+            $this->handRank = $this->upgradeHandForJokers($numJokers);
         }
 
-        return $this->handType;
+        return $this->handRank;
     }
 
-    protected function upgradeHandForJokers(int $numJokers): HandType
+    protected function upgradeHandForJokers(int $numJokers): HandRank
     {
         if ($numJokers === 0) {
-            return $this->handType;
+            return $this->handRank;
         }
 
         if ($numJokers === 1) {
-            return match($this->handType) {
-                HandType::SINGLE => HandType::ONE_PAIR,
-                HandType::ONE_PAIR => HandType::THREE_OF_A_KIND,
-                HandType::TWO_PAIR => HandType::FULL_HOUSE,
-                HandType::THREE_OF_A_KIND => HandType::FOUR_OF_A_KIND,
-                HandType::FOUR_OF_A_KIND => HandType::FIVE_OF_A_KIND,
-                default => $this->handType,
+            return match($this->handRank) {
+                HandRank::HIGH_CARD => HandRank::ONE_PAIR,
+                HandRank::ONE_PAIR => HandRank::THREE_OF_A_KIND,
+                HandRank::TWO_PAIR => HandRank::FULL_HOUSE,
+                HandRank::THREE_OF_A_KIND => HandRank::FOUR_OF_A_KIND,
+                HandRank::FOUR_OF_A_KIND => HandRank::FIVE_OF_A_KIND,
+                default => $this->handRank,
             };
         }
 
         if ($numJokers === 2) {
-            return match($this->handType) {
-                HandType::SINGLE => HandType::THREE_OF_A_KIND,
-                HandType::ONE_PAIR => HandType::FOUR_OF_A_KIND,
-                HandType::THREE_OF_A_KIND => HandType::FIVE_OF_A_KIND,
-                default => $this->handType,
+            return match($this->handRank) {
+                HandRank::HIGH_CARD => HandRank::THREE_OF_A_KIND,
+                HandRank::ONE_PAIR => HandRank::FOUR_OF_A_KIND,
+                HandRank::THREE_OF_A_KIND => HandRank::FIVE_OF_A_KIND,
+                default => $this->handRank,
             };
         }
 
         if ($numJokers === 3) {
-            return match($this->handType) {
-                HandType::SINGLE => HandType::FOUR_OF_A_KIND,
-                HandType::ONE_PAIR => HandType::FIVE_OF_A_KIND,
-                default => $this->handType,
+            return match($this->handRank) {
+                HandRank::HIGH_CARD => HandRank::FOUR_OF_A_KIND,
+                HandRank::ONE_PAIR => HandRank::FIVE_OF_A_KIND,
+                default => $this->handRank,
             };
         }
 
-        return HandType::FIVE_OF_A_KIND;
+        return HandRank::FIVE_OF_A_KIND;
     }
 }
 
@@ -151,11 +145,11 @@ class CardRanks
 //debug('JJJJA', HandType::FIVE_OF_A_KIND);
 //debug('A4888', HandType::THREE_OF_A_KIND);
 
-function debug(string $hand, HandType $expectedHandType): void
+function debug(string $hand, HandRank $expectedHandType): void
 {
     $hand = new Hand($hand, 1);
     echo 'hand: ' . $hand . PHP_EOL;
-    assert ($hand->getHandType(true) === $expectedHandType);
+    assert ($hand->getHandRank(true) === $expectedHandType);
 }
 
 function solve(array $lines, bool $allowJokers = false): int
@@ -167,7 +161,7 @@ function solve(array $lines, bool $allowJokers = false): int
     }
 
     usort($hands, function(Hand $a, Hand $b) use($allowJokers) {
-        $comp = $a->getHandType($allowJokers)->value <=> $b->getHandType($allowJokers)->value;
+        $comp = $a->getHandRank($allowJokers)->value <=> $b->getHandRank($allowJokers)->value;
         if ($comp !== 0) {
             return $comp;
         }
