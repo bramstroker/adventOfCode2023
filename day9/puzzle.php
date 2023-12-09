@@ -1,23 +1,20 @@
 <?php
 $lines = explode("\n", file_get_contents(__DIR__ . '/input2.txt'));
 
-function buildSolveTree(array $input, array $allInputs): array
+function buildSolveTree(array $line, array $tree): array
 {
-    $allInputs[] = $input;
-    if (array_sum($input) === 0) {
-        return $allInputs;
+    $tree[] = $line;
+    if (array_sum($line) === 0) {
+        return $tree;
     }
 
-    $newInput = [];
-    foreach ($input as $i => $value) {
-        if (!isset($input[$i + 1])) {
-            break;
-        }
-        $diff = $input[$i + 1] - $value;
-        $newInput[] = $diff;
+    $nextLine = [];
+    for ($i = 0; $i < count($line) - 1; $i++) {
+        $diff = $line[$i + 1] - $line[$i];
+        $nextLine[] = $diff;
     }
 
-    return buildSolveTree($newInput, $allInputs);
+    return buildSolveTree($nextLine, $tree);
 }
 
 function printTree(array $tree): void
