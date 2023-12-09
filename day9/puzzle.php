@@ -1,27 +1,6 @@
 <?php
 $lines = explode("\n", file_get_contents(__DIR__ . '/input2.txt'));
 
-function solve(array $lines): int
-{
-    $sum = 0;
-    foreach ($lines as $line) {
-         $result = getExtraPolatedValue(explode(' ', $line));
-         echo 'Result: ' . $result . PHP_EOL; // 0, 3, 6, 9, 12, 15
-         $sum += $result;
-    }
-    return $sum;
-}
-
-function getExtraPolatedValue(array $input): int
-{
-    $tree = buildSolveTree($input, []);
-    //printTree($tree);
-
-    $lastValues = array_map(fn(array $values) => end($values), $tree);
-    $lastValues = array_reverse($lastValues);
-    return array_reduce($lastValues, fn(int $previousSum, int $value) => $previousSum + $value, 0);
-}
-
 function buildSolveTree(array $input, array $allInputs): array
 {
     $allInputs[] = $input;
@@ -31,10 +10,10 @@ function buildSolveTree(array $input, array $allInputs): array
 
     $newInput = [];
     foreach ($input as $i => $value) {
-        if (!isset($input[$i+1])) {
+        if (!isset($input[$i + 1])) {
             break;
         }
-        $diff = $input[$i+1] - $value;
+        $diff = $input[$i + 1] - $value;
         $newInput[] = $diff;
     }
 
@@ -48,12 +27,36 @@ function printTree(array $tree): void
     }
 }
 
-function solve2(array $lines): int
+function solve(array $lines): int
 {
-    return 0;
+    $sum = 0;
+    foreach ($lines as $line) {
+        $tree = buildSolveTree(explode(' ', $line), []);
+
+        $lastValues = array_map(fn(array $values) => end($values), $tree);
+        $lastValues = array_reverse($lastValues);
+        $result = array_reduce($lastValues, fn(int $previousSum, int $value) => $previousSum + $value, 0);
+        //echo 'Result: ' . $result . PHP_EOL;
+        $sum += $result;
+    }
+    return $sum;
 }
 
-var_dump(getExtraPolatedValue([0, 3, 6, 9, 12, 15]));
+function solve2(array $lines): int
+{
+    $sum = 0;
+    foreach ($lines as $line) {
+        $tree = buildSolveTree(explode(' ', $line), []);
+        //printTree($tree);
+
+        $firstValues = array_map(fn(array $values) => current($values), $tree);
+        $firstValues = array_reverse($firstValues);
+        $result = array_reduce($firstValues, fn(int $previousSum, int $value) => $value - $previousSum, 0);
+        //echo 'Result: ' . $result . PHP_EOL;
+        $sum += $result;
+    }
+    return $sum;
+}
 
 $solution1 = solve($lines);
 $solution2 = solve2($lines);
