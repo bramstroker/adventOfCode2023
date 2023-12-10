@@ -1,5 +1,5 @@
 <?php
-$lines = explode("\n", file_get_contents(__DIR__ . '/input4.txt'));
+$lines = explode("\n", file_get_contents(__DIR__ . '/input3.txt'));
 
 
 
@@ -174,8 +174,35 @@ enum Direction
     case RIGHT;
 }
 
+class GridPrinter
+{
+    protected array $characterMap = [
+        'S' => 'S',
+        ' ' => ' ',
+        '.' => '.',
+        '|' => '║',
+        '-' => '═',
+        'J' => '╝',
+        'L' => '╚',
+        '7' => '╗',
+        'F' => '╔',
+    ];
+    public function format(PipeGrid $grid): string
+    {
+        $formatted = '';
+        foreach ($grid->grid as $line) {
+            foreach ($line as $pipe) {
+                $formatted .= $this->characterMap[$pipe];
+            }
+            $formatted .= PHP_EOL;
+        }
+        return $formatted;
+    }
+}
+
 $pipeGrid = PipeGrid::createFromInput($lines);
 $loop = $pipeGrid->findMainLoop();
+echo (new GridPrinter())->format($pipeGrid);
 
 $solution1 = solve($loop);
 $solution2 = solve2($pipeGrid, $loop);
