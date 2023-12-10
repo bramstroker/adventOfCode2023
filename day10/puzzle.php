@@ -10,7 +10,6 @@ function solve(array $pipeLoop): int
 
 function solve2(PipeGrid $pipeGrid, array $pipeLoop): int
 {
-    $totalInside = 0;
     $insidePoints = [];
     foreach ($pipeGrid->grid as $y => $line) {
         $countInside = 0;
@@ -26,17 +25,14 @@ function solve2(PipeGrid $pipeGrid, array $pipeLoop): int
 
             if ($inside) {
                 $insidePoints[] = $point;
-                $countInside++;
             }
         }
         //echo 'Line ' . $y . ': ' . $countInside . PHP_EOL;
-
-        $totalInside += $countInside;
     }
 
     echo (new GridPrinter())->format($pipeGrid, $pipeLoop, $insidePoints);
 
-    return $totalInside;
+    return count($insidePoints);
 }
 
 class PipeGrid
