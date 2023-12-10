@@ -11,6 +11,7 @@ function solve(array $pipeLoop): int
 function solve2(PipeGrid $pipeGrid, array $pipeLoop): int
 {
     $totalInside = 0;
+    $insidePoints = [];
     foreach ($pipeGrid->grid as $y => $line) {
         $countInside = 0;
         $inside = false;
@@ -24,6 +25,7 @@ function solve2(PipeGrid $pipeGrid, array $pipeLoop): int
             }
 
             if ($inside) {
+                $insidePoints[] = $point;
                 $countInside++;
             }
         }
@@ -31,6 +33,9 @@ function solve2(PipeGrid $pipeGrid, array $pipeLoop): int
 
         $totalInside += $countInside;
     }
+
+    echo (new GridPrinter())->format($pipeGrid, $pipeLoop, $insidePoints);
+
     return $totalInside;
 }
 
@@ -187,11 +192,20 @@ class GridPrinter
         '7' => '╗',
         'F' => '╔',
     ];
-    public function format(PipeGrid $grid): string
+    public function format(PipeGrid $grid, ?array $loop, ?array $insidePoints): string
     {
         $formatted = '';
-        foreach ($grid->grid as $line) {
-            foreach ($line as $pipe) {
+        foreach ($grid->grid as $y => $line) {
+            foreach ($line as $x => $pipe) {
+                $point = new Point($x, $y);
+                if ($insidePoints && in_array($point, $insidePoints)) {
+                    $formatted .= 'I';
+                    continue;
+                }
+                if ($loop && !in_array($point, $loop)) {
+                    $formatted .= ' ';
+                    continue;
+                }
                 $formatted .= $this->characterMap[$pipe];
             }
             $formatted .= PHP_EOL;
@@ -202,7 +216,7 @@ class GridPrinter
 
 $pipeGrid = PipeGrid::createFromInput($lines);
 $loop = $pipeGrid->findMainLoop();
-echo (new GridPrinter())->format($pipeGrid);
+//echo (new GridPrinter())->format($pipeGrid, $loop);
 
 $solution1 = solve($loop);
 $solution2 = solve2($pipeGrid, $loop);
