@@ -6,44 +6,41 @@ function findMirrorLocation(array $rows, bool $needsSmudge = false): int
     $numRows = count($rows);
     for ($i = 0; $i < $numRows - 1; $i++) {
         $diffCount = count(array_diff_assoc($rows[$i], $rows[$i + 1]));
-        if ($diffCount <= ($needsSmudge ? 1 : 0)) {
-            $offset = 0;
-            $allMirrored = true;
-            $smudgeCount = 0;
+        if ($diffCount > ($needsSmudge ? 1 : 0)) {
+            continue;
+        }
 
-            # Compare rows above and below the current row until we hit boundaries or a non-mirror
-            while (($i - $offset) >= 0 && ($i + 1 + $offset) < count($rows)) {
-                //echo 'Checking rows ' . ($i - $offset) . ' and ' . ($i + 1 + $offset) . PHP_EOL;
-                $row1 = $rows[$i - $offset];
-                $row2 = $rows[$i + 1 + $offset];
-                if ($row1 !== $row2) {
-                    if ($needsSmudge) {
-                        $diff = array_diff_assoc($row1, $row2);
-                        $smudgeCount += count($diff);
-                        if ($smudgeCount > 1) {
-                            $allMirrored = false;
-                            break;
-                        }
-                    } else {
-                        $allMirrored = false;
-                        break;
-                    }
-                }
-                $offset++;
-            }
-
-            # We need exactly one smudge
-            if ($needsSmudge && $smudgeCount <> 1) {
-                continue;
-            }
-
-            if ($allMirrored) {
-                return $i + 1;
-            }
+        if (areRowsMirrored($rows, $i, $needsSmudge)) {
+            return $i + 1;
         }
     }
 
     return 0;
+}
+
+function areRowsMirrored(array $rows, int $index, bool $needsSmudge): bool
+{
+    $offset = 0;
+    $allMirrored = true;
+    $smudgeCount = 0;
+    $numRows = count($rows);
+
+    # Compare rows above and below the current row until we hit boundaries or a non-mirror
+    while (($index - $offset) >= 0 && ($index + 1 + $offset) < $numRows) {
+        $diffCount = count(array_diff_assoc($rows[$index - $offset], $rows[$index + 1 + $offset]));
+        $offset++;
+        if (!$diffCount) {
+            continue;
+        }
+
+        $smudgeCount += $diffCount;
+        if ($needsSmudge && $smudgeCount > 1 || !$needsSmudge) {
+            $allMirrored = false;
+            break;
+        }
+    }
+
+    return $needsSmudge ? $smudgeCount === 1 && $allMirrored : $allMirrored;
 }
 
 function rotateMatrix90Degrees(array $matrix): array
