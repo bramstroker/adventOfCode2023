@@ -21,8 +21,14 @@ enum Direction
     }
 }
 
-function castRay(array &$grid, int $x, int $y, Direction $direction, array &$handled = [], array &$energized = []): array
-{
+function castRay(
+    array &$grid,
+    int $x,
+    int $y,
+    Direction $direction,
+    array &$handled = [],
+    array &$energized = []
+): array {
     $key = $x . ',' . $y . ',' . $direction->name;
     if (in_array($key, $handled)) {
         return $energized;
@@ -69,7 +75,8 @@ function castRay(array &$grid, int $x, int $y, Direction $direction, array &$han
     return $energized;
 }
 
-function getMarker(Direction $direction): string {
+function getMarker(Direction $direction): string
+{
     return match ($direction) {
         Direction::UP => '^',
         Direction::DOWN => 'v',
