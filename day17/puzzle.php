@@ -62,7 +62,7 @@ class PathFinder
             }
             $this->visited[$key] = true;
 
-            foreach ($this->getNeighbours(new Node($x, $y)) as $neighbour)
+            foreach ($this->getNeighbours($current->node) as $neighbour)
             {
                 $neighbourNode = $neighbour[0];
                 $nx = $neighbourNode->x;
