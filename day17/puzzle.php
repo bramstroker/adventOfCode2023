@@ -23,11 +23,11 @@ class PathFinder
 {
     protected array $distances = [];
     protected array $visited = [];
-    protected WorkQueue $queue;
+    protected SplMinHeap $queue;
 
     public function __construct(public readonly array $grid)
     {
-        $this->queue = new WorkQueue();
+        $this->queue = new SplMinHeap();
         $this->initialize();
     }
 
@@ -39,7 +39,7 @@ class PathFinder
                 if ($x === 0 && $y === 0) {
                     $distance = 0;
                     $pathInfo = new PathInfo(new Node($x, $y), Direction::RIGHT);
-                    $this->queue->insert($pathInfo, $distance);
+                    $this->queue->insert([$distance, $pathInfo]);
 
                 }
                 $this->distances[$x][$y] = $distance;
@@ -47,12 +47,12 @@ class PathFinder
         }
     }
 
-    public function runDijkstra(int $minDistance = 1, int $maxDistance = 3)
+    public function runDijkstra(int $minDistance = 1, int $maxDistance = 3): int
     {
         $end = new Node(count($this->grid[0]) - 1, count($this->grid) - 1);
         while (!$this->queue->isEmpty())
         {
-            $current = $this->queue->extract();
+            $current = $this->queue->extract()[1];
             $x = $current->node->x;
             $y = $current->node->y;
 
@@ -93,10 +93,11 @@ class PathFinder
                 }
 
                 $newDistance = $current->distance + $this->grid[$ny][$nx];
+
                 if ($newDistance < $this->distances[$nx][$ny]) {
                     $this->distances[$nx][$ny] = $newDistance;
                 }
-                $this->queue->insert(new PathInfo(new Node($nx, $ny), $nDirection, $nDirectionCount, $newDistance), $newDistance);
+                $this->queue->insert([$newDistance, new PathInfo(new Node($nx, $ny), $nDirection, $nDirectionCount, $newDistance)]);
             }
         }
         return $this->distances[$end->x][$end->y];
