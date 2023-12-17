@@ -6,16 +6,16 @@
  * part2 94   correct
  *
  * Input 2: Real puzzle input
- * 
+ *
  * part1 1039 correct
- * part2 1199 incorrect
+ * part2 1201 correct
  *
  * Input 3: example 2
  * part1 ?
- * part2 23    (should be 71)
+ * part2 47    (should be 71)
  */
 
-$lines = explode("\n", file_get_contents(__DIR__ . '/input.txt'));
+$lines = explode("\n", file_get_contents(__DIR__ . '/input3.txt'));
 
 $grid = array_map(fn($line) => str_split($line), $lines);
 
@@ -71,6 +71,11 @@ class PathFinder
                 $nDirection = $neighbour[1];
                 # Increase neighbour direction count if direction is the same as current
                 $nDirectionCount = ($nDirection == $current->direction ? $current->directionCount + 1 : 1);
+
+                # Cannot reverse direction
+                if ($nDirection->opposite() == $current->direction) {
+                    continue;
+                }
 
                 # Skip if direction count is too high
                 if ($nDirectionCount > $maxDistance) {
@@ -169,6 +174,16 @@ enum Direction
     case DOWN;
     case LEFT;
     case RIGHT;
+
+    public function opposite(): Direction
+    {
+        return match ($this) {
+            Direction::UP => Direction::DOWN,
+            Direction::DOWN => Direction::UP,
+            Direction::LEFT => Direction::RIGHT,
+            Direction::RIGHT => Direction::LEFT,
+        };
+    }
 }
 
 class Node
@@ -206,7 +221,7 @@ class WorkQueue extends SplPriorityQueue
 function solve(array $grid): int
 {
     $pathFinder = new PathFinder($grid);
-    return $pathFinder->runDijkstra() + 1; # No idea yet about this off by one error :-)
+    return $pathFinder->runDijkstra();
 }
 
 function solve2(array $grid): int
