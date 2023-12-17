@@ -88,6 +88,7 @@ class PathFinder
                 $this->queue->insert([$newDistance, new PathInfo(new Node($nx, $ny), $nDirection, $nDirectionCount, $newDistance, $current)]);
             }
         }
+        throw new \Exception('No path found');
     }
 
     public function getDistances(): array
@@ -188,7 +189,7 @@ function solve(array $grid): int
 {
     $pathFinder = new PathFinder($grid);
     $pathInfo = $pathFinder->runDijkstra();
-    //$pathFinder->drawPath($pathInfo);
+    $pathFinder->drawPath($pathInfo);
     return $pathInfo->distance;
 }
 
