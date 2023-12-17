@@ -43,13 +43,13 @@ class PathFinder
 
                 }
                 $this->distances[$x][$y] = $distance;
-
             }
         }
     }
 
     public function runDijkstra(int $minDistance = 1, int $maxDistance = 3)
     {
+        $end = new Node(count($this->grid[0]) - 1, count($this->grid) - 1);
         while (!$this->queue->isEmpty())
         {
             $current = $this->queue->extract();
@@ -87,8 +87,13 @@ class PathFinder
                     continue;
                 }
 
+                # Skip if we are at the end and direction count is too low
+                if ($nx === $end->x && $ny === $end->y && $nDirectionCount < $minDistance) {
+                    continue;
+                }
+
                 $newDistance = $current->distance + $this->grid[$ny][$nx];
-                if (!isset($this->distances[$nx][$ny]) || $newDistance < $this->distances[$nx][$ny]) {
+                if ($newDistance < $this->distances[$nx][$ny]) {
                     $this->distances[$nx][$ny] = $newDistance;
                 }
                 $this->queue->insert(new PathInfo(new Node($nx, $ny), $nDirection, $nDirectionCount, $newDistance), $newDistance);
@@ -221,7 +226,9 @@ class WorkQueue extends SplPriorityQueue
 function solve(array $grid): int
 {
     $pathFinder = new PathFinder($grid);
-    return $pathFinder->runDijkstra();
+    $answer = $pathFinder->runDijkstra();
+    //$pathFinder->visualizeDistances();
+    return $answer;
 }
 
 function solve2(array $grid): int
