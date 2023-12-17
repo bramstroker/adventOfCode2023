@@ -12,28 +12,13 @@ class PathFinder
     public function __construct(public readonly array $grid)
     {
         $this->queue = new SplMinHeap();
-        $this->initialize();
-    }
-
-    protected function initialize(): void
-    {
-        foreach ($this->grid as $y => $line) {
-            foreach ($line as $x => $value) {
-                $distance = PHP_INT_MAX;
-                if ($x === 0 && $y === 0) {
-                    $distance = 0;
-                    $pathInfo = new PathInfo(new Node($x, $y), Direction::RIGHT);
-                    $this->queue->insert([$distance, $pathInfo]);
-
-                }
-                $this->distances[$x][$y] = $distance;
-            }
-        }
     }
 
     public function runDijkstra(int $minDistance = 1, int $maxDistance = 3): PathInfo
     {
         $end = new Node(count($this->grid[0]) - 1, count($this->grid) - 1);
+        $pathInfo = new PathInfo(new Node(0, 0), Direction::RIGHT);
+        $this->queue->insert([0, $pathInfo]);
         while (!$this->queue->isEmpty())
         {
             $current = $this->queue->extract()[1];
@@ -82,7 +67,7 @@ class PathFinder
 
                 $newDistance = $current->distance + $this->grid[$ny][$nx];
 
-                if ($newDistance < $this->distances[$nx][$ny]) {
+                if ($newDistance < ($this->distances[$nx][$ny] ?? PHP_INT_MAX)) {
                     $this->distances[$nx][$ny] = $newDistance;
                 }
                 $this->queue->insert([$newDistance, new PathInfo(new Node($nx, $ny), $nDirection, $nDirectionCount, $newDistance, $current)]);
@@ -189,14 +174,17 @@ function solve(array $grid): int
 {
     $pathFinder = new PathFinder($grid);
     $pathInfo = $pathFinder->runDijkstra();
-    $pathFinder->drawPath($pathInfo);
+    //$pathFinder->drawPath($pathInfo);
     return $pathInfo->distance;
 }
 
 function solve2(array $grid): int
 {
     $pathFinder = new PathFinder($grid);
-    return $pathFinder->runDijkstra(4, 10)->distance;
+    $pathInfo = $pathFinder->runDijkstra(4, 10);
+    //echo PHP_EOL;
+    //$pathFinder->drawPath($pathInfo);
+    return $pathInfo->distance;
 }
 
 $solution1 = solve($grid);
