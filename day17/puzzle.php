@@ -1,20 +1,4 @@
 <?php
-/**
- * Input 1: example 1
- *
- * part1 102  correct
- * part2 94   correct
- *
- * Input 2: Real puzzle input
- *
- * part1 1039 correct
- * part2 1201 correct
- *
- * Input 3: example 2
- * part1 ?
- * part2 47    (should be 71)
- */
-
 $lines = explode("\n", file_get_contents(__DIR__ . '/input2.txt'));
 
 $grid = array_map(fn($line) => str_split($line), $lines);
@@ -47,7 +31,7 @@ class PathFinder
         }
     }
 
-    public function runDijkstra(int $minDistance = 1, int $maxDistance = 3): int
+    public function runDijkstra(int $minDistance = 1, int $maxDistance = 3): PathInfo
     {
         $end = new Node(count($this->grid[0]) - 1, count($this->grid) - 1);
         while (!$this->queue->isEmpty())
@@ -55,6 +39,10 @@ class PathFinder
             $current = $this->queue->extract()[1];
             $x = $current->node->x;
             $y = $current->node->y;
+
+            if ($x === $end->x && $y === $end->y) {
+                return $current;
+            }
 
             $key = implode('|', [$x, $y, $current->direction->name, $current->directionCount]);
             if (isset($this->visited[$key])) {
@@ -97,10 +85,9 @@ class PathFinder
                 if ($newDistance < $this->distances[$nx][$ny]) {
                     $this->distances[$nx][$ny] = $newDistance;
                 }
-                $this->queue->insert([$newDistance, new PathInfo(new Node($nx, $ny), $nDirection, $nDirectionCount, $newDistance)]);
+                $this->queue->insert([$newDistance, new PathInfo(new Node($nx, $ny), $nDirection, $nDirectionCount, $newDistance, $current)]);
             }
         }
-        return $this->distances[$end->x][$end->y];
     }
 
     public function getDistances(): array
@@ -131,6 +118,25 @@ class PathFinder
                 echo str_pad($this->distances[$x][$y], 3, ' ', STR_PAD_LEFT) . ' ';
             }
             echo PHP_EOL;
+        }
+    }
+
+    public function drawPath(PathInfo $pathInfo): void
+    {
+        $grid = $this->grid;
+        while ($pathInfo->previous !== null) {
+            $char = match ($pathInfo->direction) {
+                Direction::UP => '↑',
+                Direction::DOWN => '↓',
+                Direction::LEFT => '←',
+                Direction::RIGHT => '→',
+            };
+            $grid[$pathInfo->node->y][$pathInfo->node->x] = "\033[31m{$char}\033[0m";
+            $pathInfo = $pathInfo->previous;
+        }
+
+        foreach ($grid as $row) {
+            echo implode(' ', $row) . PHP_EOL;
         }
     }
 }
@@ -172,6 +178,7 @@ class PathInfo
         public readonly Direction $direction,
         public readonly int $directionCount = 0,
         public readonly int $distance = 0,
+        public readonly ?PathInfo $previous = null
     ) {
         return;
     }
@@ -180,15 +187,15 @@ class PathInfo
 function solve(array $grid): int
 {
     $pathFinder = new PathFinder($grid);
-    $answer = $pathFinder->runDijkstra();
-    //$pathFinder->visualizeDistances();
-    return $answer;
+    $pathInfo = $pathFinder->runDijkstra();
+    //$pathFinder->drawPath($pathInfo);
+    return $pathInfo->distance;
 }
 
 function solve2(array $grid): int
 {
     $pathFinder = new PathFinder($grid);
-    return $pathFinder->runDijkstra(4, 10);
+    return $pathFinder->runDijkstra(4, 10)->distance;
 }
 
 $solution1 = solve($grid);
