@@ -169,7 +169,7 @@ class PathInfo
 {
     public function __construct(
         public readonly Node $node,
-        public readonly ?Direction $direction,
+        public readonly Direction $direction,
         public readonly int $directionCount = 0,
         public readonly int $distance = 0,
     ) {
