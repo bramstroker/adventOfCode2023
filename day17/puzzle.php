@@ -73,7 +73,7 @@ class PathFinder
                 $nDirectionCount = ($nDirection == $current->direction ? $current->directionCount + 1 : 1);
 
                 # Cannot reverse direction
-                if ($nDirection->opposite() == $current->direction) {
+                if ($nDirection->opposite() === $current->direction) {
                     continue;
                 }
 
@@ -174,14 +174,6 @@ class PathInfo
         public readonly int $distance = 0,
     ) {
         return;
-    }
-}
-
-class WorkQueue extends SplPriorityQueue
-{
-    public function compare($priority1, $priority2): int
-    {
-        return $priority2 <=> $priority1;
     }
 }
 
