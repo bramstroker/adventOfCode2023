@@ -15,7 +15,7 @@
  * part2 47    (should be 71)
  */
 
-$lines = explode("\n", file_get_contents(__DIR__ . '/input3.txt'));
+$lines = explode("\n", file_get_contents(__DIR__ . '/input2.txt'));
 
 $grid = array_map(fn($line) => str_split($line), $lines);
 
@@ -99,8 +99,7 @@ class PathFinder
                 $this->queue->insert(new PathInfo(new Node($nx, $ny), $nDirection, $nDirectionCount, $newDistance), $newDistance);
             }
         }
-        $end = [count($this->grid[0]) - 1, count($this->grid) - 1];
-        return $this->distances[$end[0]][$end[1]];
+        return $this->distances[$end->x][$end->y];
     }
 
     public function getDistances(): array
@@ -124,45 +123,7 @@ class PathFinder
         );
     }
 
-    public function visualize()
-    {
-        $visualGrid = $this->grid;
-        $x = 0;
-        $y = 0;
-        $visited = [];
-        while ($x < count($visualGrid[0]) && $y < count($visualGrid)) {
-            $neighbours = $this->getNeighbours(new Node($x, $y));
-            $neighbours = array_filter(
-                $neighbours,
-                fn(array $neighbour) => !isset($visited[$neighbour[0]->x][$neighbour[0]->y])
-            );
-            usort(
-                $neighbours,
-                fn(array $a, array $b) => $this->distances[$a[0]->x][$a[0]->y] <=> $this->distances[$b[0]->x][$b[0]->y]
-            );
-            if (count($neighbours) === 0) {
-                break;
-            }
-            $neighbour = current($neighbours);
-            $x = $neighbour[0]->x;
-            $y = $neighbour[0]->y;
-            $direction = $neighbour[1];
-            $visualGrid[$y][$x] = match ($direction) {
-                Direction::UP => '^',
-                Direction::DOWN => 'v',
-                Direction::LEFT => '<',
-                Direction::RIGHT => '>',
-            };
-            $visited[$x][$y] = true;
-            echo 'Visiting ' . $x . ',' . $y . PHP_EOL;
-        }
-
-        foreach ($visualGrid as $row) {
-            echo implode('', $row) . PHP_EOL;
-        }
-    }
-
-    public function visualizeDistances()
+    public function visualizeDistances(): void
     {
         for ($y = 0; $y < count($this->distances[0]); $y++) {
             for ($x = 0; $x < count($this->distances); $x++) {
