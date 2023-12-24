@@ -70,7 +70,17 @@ class Machine
         return $this->modules;
     }
 
-    public function triggerButton(): void
+    /**
+     * @param string $destination
+     * @return array
+     */
+    public function getModulesHavingDestination(string $destination): array
+    {
+        $destinationModule = $this->getModule($destination);
+        return array_filter($this->modules, fn(ModuleInterface $module) => in_array($destinationModule, $module->getOutputModules()));
+    }
+
+    public function triggerButton(?callable $pulseCallback = null): void
     {
         $queue = [];
 
@@ -83,9 +93,12 @@ class Machine
         /** @var ModuleInterface $module */
         while (($pulse = array_shift($queue)) !== null)
         {
-            echo 'Pulse ' . $pulse->type->name . ' from ' . $pulse->source->name . ' to ' . $pulse->target->name . PHP_EOL;
+            //echo 'Pulse ' . $pulse->type->name . ' from ' . $pulse->source->name . ' to ' . $pulse->target->name . PHP_EOL;
             $module = $pulse->target;
             $nextPulseType = $module->handlePulse($pulse);
+            if ($pulseCallback !== null) {
+                $pulseCallback($pulse);
+            }
 
             $this->pulseCounts[$pulse->type->name]++;
             if ($nextPulseType === null) {
@@ -218,11 +231,11 @@ class MachineFactory
             $module = $machine->getModule($moduleName);
             foreach ($destinations as $destination) {
                 $outputModule = $machine->getModule($destination);
-                if ($outputModule !== null) {
-                    $module->addOutputModule($machine->getModule($destination));
-                } else {
-                    $module->addOutputModule(new NullModule($destination));
+                if ($outputModule == null) {
+                    $outputModule = new NullModule($destination);
+                    $machine->addModule($outputModule);
                 }
+                $module->addOutputModule($outputModule);
 
                 if (in_array($destination, array_keys($inputAwareModules))) {
                     $inputAwareModules[$destination]->addInputModule($module);
@@ -235,15 +248,61 @@ class MachineFactory
 
 $lines = explode("\n", file_get_contents(__DIR__ . '/input3.txt'));
 
-$machineFactory = new MachineFactory();
-$machine = $machineFactory->create($lines);
-for ($i = 0; $i < 1000; $i++) {
-    echo 'Trigger ' . $i . PHP_EOL;
-    $machine->triggerButton();
+function solve1(array $lines): int
+{
+    $machineFactory = new MachineFactory();
+    $machine = $machineFactory->create($lines);
+    for ($i = 0; $i < 1000; $i++) {
+        $machine->triggerButton();
+    }
+    $highCount = $machine->getPulseCount(PulseType::HIGH);
+    $lowCount = $machine->getPulseCount(PulseType::LOW);
+//    echo 'High: ' . $highCount . PHP_EOL;
+//    echo 'Low: ' . $lowCount . PHP_EOL;
+    return $lowCount * $highCount . PHP_EOL;
 }
 
-$highCount = $machine->getPulseCount(PulseType::HIGH) . PHP_EOL;
-$lowCount = $machine->getPulseCount(PulseType::LOW) . PHP_EOL;
-echo 'High: ' . $highCount . PHP_EOL;
-echo 'Low: ' . $lowCount . PHP_EOL;
-echo $lowCount * $highCount . PHP_EOL;
+function solve2(array $lines): int
+{
+    $machineFactory = new MachineFactory();
+    $machine = $machineFactory->create($lines);
+    $rxSourceModule = current($machine->getModulesHavingDestination('rx'));
+    $modulesToWatch = $machine->getModulesHavingDestination($rxSourceModule->name);
+
+    $loCycleSteps = [];
+    for ($i = 0; $i < 1000000; $i++) {
+        $callback = function (Pulse $pulse) use ($modulesToWatch, $i, &$loCycleSteps) {
+            if (in_array($pulse->target, $modulesToWatch) && $pulse->isLow()) {
+                $loCycleSteps[$pulse->target->name] = $i + 1;
+                //echo 'LOW ' . $pulse->target->name . ' at ' . $i . PHP_EOL;
+            }
+        };
+
+        $machine->triggerButton($callback);
+        if (count($loCycleSteps) === count($modulesToWatch)) {
+            break;
+        }
+    }
+    return calculateLcm($loCycleSteps);
+}
+
+$solution1 = solve1($lines);
+$solution2 = solve2($lines);
+
+echo 'Solution 1 = ' . $solution1 . PHP_EOL;
+echo 'Solution 2 = ' . $solution2 . PHP_EOL;
+
+function gcd($a, $b): int
+{
+    if ($b == 0)
+        return $a;
+    return gcd($b, $a % $b);
+}
+
+function calculateLcm($stepSizes): int
+{
+    $result = 1;
+    foreach ($stepSizes as $val)
+        $result = ((($val * $result)) / (gcd($val, $result)));
+    return $result;
+}
